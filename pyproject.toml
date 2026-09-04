@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "neural-alpha-ashare"
+version = "0.1.0"
+description = "Vectorized, point-in-time A-share machine-learning research platform"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+license = { text = "MIT" }
+authors = [{ name = "javabugmaker" }]
+dependencies = [
+  "joblib>=1.4",
+  "httpx[socks]>=0.27",
+  "lightgbm>=4.7",
+  "matplotlib>=3.9",
+  "numpy>=2.0",
+  "pandas>=2.2",
+  "polars>=1.20",
+  "psutil>=6.1",
+  "pyarrow>=18",
+  "PyYAML>=6.0",
+  "scikit-learn>=1.6",
+  "tickflow>=0.1",
+]
+
+[project.optional-dependencies]
+fast = ["numba>=0.61"]
+gpu = ["catboost>=1.2"]
+dev = ["pytest>=8.3", "pytest-cov>=6.0", "ruff>=0.9"]
+
+[project.scripts]
+alpha-ashare = "neural_alpha_ashare.cli:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]

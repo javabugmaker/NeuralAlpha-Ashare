@@ -1,0 +1,107 @@
+paths:
+  data_dir: data
+  raw_dir: data/raw
+  derived_dir: data/derived
+  cache_dir: data/cache
+  models_dir: models
+  predictions_dir: predictions
+  backtests_dir: backtests
+  logs_dir: logs
+  docs_dir: docs
+
+runtime:
+  memory_soft_limit_gb: 11.5
+  cpu_threads: 6
+  seed: 20260905
+
+tickflow:
+  exchanges: [SH, SZ, BJ]
+  instrument_types: [stock, etf, fund]
+  benchmark: 000300.SH
+  history_start: 2005-01-01
+  overlap_calendar_days: 21
+  max_workers: 2
+  batch_size: 100
+  timeout_seconds: 45
+  max_retries: 4
+
+data:
+  strict_pit: true
+  strict_survivorship: true
+  min_history_sessions: 240
+  min_feature_coverage: 0.95
+  min_median_amount_20: 20000000
+  allowed_boards: [MAIN, CHINEXT, STAR]
+  include_bse: false
+  exclude_st: true
+  exclude_one_price_limit: true
+
+features:
+  max_lookback_sessions: 240
+  min_cross_section: 30
+
+labels:
+  horizons: [5, 20, 60]
+  weights: [0.2, 0.5, 0.3]
+  liquidity_buckets: 5
+
+model:
+  primary: lightgbm
+  rolling_train_years: 8
+  max_train_rows: 1800000
+  max_validation_rows: 400000
+  ridge_alpha: 10.0
+  lightgbm:
+    objective: huber
+    learning_rate: 0.03
+    n_estimators: 2000
+    num_leaves: 31
+    max_depth: 8
+    min_child_samples: 1000
+    max_bin: 63
+    subsample: 0.8
+    colsample_bytree: 0.75
+    reg_alpha: 0.1
+    reg_lambda: 1.0
+    early_stopping_rounds: 100
+  catboost:
+    iterations: 3000
+    depth: 8
+    learning_rate: 0.03
+    l2_leaf_reg: 5.0
+    random_strength: 0.5
+    border_count: 64
+    early_stopping_rounds: 100
+    devices: "0"
+
+walk_forward:
+  initial_train_sessions: 756
+  validation_sessions: 126
+  test_sessions: 126
+  step_sessions: 126
+  purge_sessions: 60
+  embargo_sessions: 5
+
+portfolio:
+  initial_capital: 200000
+  research_capital: 1000000
+  entry_rank: 15
+  exit_rank: 60
+  rebalance_every_sessions: 5
+  max_weight: 0.10
+  max_holding_sessions: 60
+  lot_size: 100
+  max_participation: 0.02
+  slippage_bps: 5.0
+  impact_coefficient: 0.10
+  impact_exponent: 0.5
+  max_impact_bps: 30.0
+  stock_commission: 0.00008499999
+  fund_commission: 0.00005000001
+  minimum_commission: 0.0
+  stock_sell_stamp_duty: 0.0005
+  max_exit_wait_sessions: 10
+
+reports:
+  title: NeuralAlpha A股研究台
+  timezone: Asia/Shanghai
