@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import sys
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -24,6 +25,29 @@ BAR_COLUMNS = [
     "volume",
     "amount",
 ]
+
+_TICKFLOW_NOTICE_CHARACTERS = "🆓✅❌⚠️💡"
+
+
+def _make_tickflow_notice_safe(stream: Any) -> None:
+    """Prevent TickFlow's emoji notice from crashing legacy Windows consoles.
+
+    TickFlow.free() prints several emoji before constructing its client.  A
+    Windows stream using GBK/CP936 cannot encode those characters with the
+    default ``strict`` error handler.  Keep the user's current encoding (so
+    Chinese output remains readable) and only replace unsupported glyphs.
+    """
+    encoding = getattr(stream, "encoding", None)
+    reconfigure = getattr(stream, "reconfigure", None)
+    if not encoding or not callable(reconfigure):
+        return
+    try:
+        _TICKFLOW_NOTICE_CHARACTERS.encode(encoding)
+    except (LookupError, UnicodeEncodeError):
+        try:
+            reconfigure(errors="replace")
+        except (OSError, ValueError):  # pragma: no cover - closed/custom streams
+            LOGGER.debug("Unable to relax stdout encoding errors", exc_info=True)
 
 
 def _millis(value: str | pd.Timestamp, end_of_day: bool = False) -> int:
@@ -89,6 +113,7 @@ class TickFlowFreeClient:
                 from tickflow import TickFlow
             except ImportError as exc:  # pragma: no cover
                 raise RuntimeError("tickflow is required; run pip install -e .") from exc
+            _make_tickflow_notice_safe(sys.stdout)
             sdk = TickFlow.free(
                 timeout=float(config.timeout_seconds),
                 max_retries=int(config.max_retries),

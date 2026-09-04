@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import io
 from pathlib import Path
 
 from neural_alpha_ashare.config import TickFlowConfig
-from neural_alpha_ashare.data.tickflow import TickFlowFreeClient
+from neural_alpha_ashare.data.tickflow import (
+    TickFlowFreeClient,
+    _make_tickflow_notice_safe,
+)
 
 
 class _Exchanges:
@@ -48,6 +52,18 @@ def test_tickflow_boundary_forces_unadjusted_data() -> None:
     result = TickFlowFreeClient(config, sdk=_SDK()).update()
     assert result.rows_received == 1
     assert result.catalog.height == 1
+
+
+def test_tickflow_notice_does_not_crash_gbk_windows_stream() -> None:
+    buffer = io.BytesIO()
+    stream = io.TextIOWrapper(buffer, encoding="gbk")
+    _make_tickflow_notice_safe(stream)
+
+    stream.write("🆓 TickFlow 免费服务")
+    stream.flush()
+
+    assert stream.errors == "replace"
+    assert "TickFlow 免费服务" in buffer.getvalue().decode("gbk")
 
 
 def test_vectorized_hotpaths_have_no_rowwise_pandas() -> None:
